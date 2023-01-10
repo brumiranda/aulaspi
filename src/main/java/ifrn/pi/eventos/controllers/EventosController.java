@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import ifrn.pi.eventos.models.Evento;
+import ifrn.pi.eventos.models.convidado;
+import ifrn.pi.eventos.repositores.ConvidadoRepository;
 import ifrn.pi.eventos.repositores.EventoRepository;
 
 @Controller
@@ -21,6 +23,8 @@ public class EventosController {
 
 	@Autowired
 	private EventoRepository er;
+	@Autowired
+	private ConvidadoRepository cr;
 
 	@RequestMapping("/form")
 	public String form() {
@@ -41,7 +45,7 @@ public class EventosController {
 		List<Evento> eventos = er.findAll();
 		ModelAndView mv = new ModelAndView("eventos/lista");
 		mv.addObject("eventos", eventos);
-		return mv;
+		return mv; 
 	}
 
 	@GetMapping("/{id}")
@@ -54,12 +58,28 @@ public class EventosController {
 		}
 		md.setViewName("eventos/detalhes");
 		Evento evento = opt.get();
-
 		md.addObject("evento", evento);
 
+		List<convidado> convidados = cr.findByEvento(evento);
+		md.addObject("convidados", convidados);
 		return md;
 	}
 	
-	
+	@PostMapping("/{codigo}")
+	public String salvarConvidado(@PathVariable Long codigo, ifrn.pi.eventos.models.convidado convidado) {
+		System.out.println("Id do evento: " + codigo);
+		System.out.println("convidado");
+		
+		Optional<Evento> opt = er.findById(codigo);
+			if(opt.isEmpty()) {
+				return "redirect:/eventos";
+			}
+			
+			Evento evento = opt.get();
+			convidado.setEvento(evento);
+			
+			cr.save(convidado);
+		return "redirect:/eventos/{codigo}";
+	}
 
 }
