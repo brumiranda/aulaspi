@@ -81,5 +81,20 @@ public class EventosController {
 			cr.save(convidado);
 		return "redirect:/eventos/{codigo}";
 	}
-
+	@GetMapping("/{id}/remover")
+	public String apagarEvento(@PathVariable Long id) {
+		
+		Optional<Evento> opt = er.findById(id);
+		if(!opt.isEmpty()) {
+			Evento evento = opt.get();
+			
+			List<convidado> convidados = cr.findByEvento(evento);
+			
+			cr.deleteAll(convidados);
+			
+			er.delete(evento);
+			
+		}
+		return "redirect:/eventos";
+	}
 }
