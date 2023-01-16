@@ -27,7 +27,7 @@ public class EventosController {
 	private ConvidadoRepository cr;
 
 	@RequestMapping("/form")
-	public String form() {
+	public String form(Evento evento) {
 		return "eventos/formEvento";
 	}
 
@@ -37,7 +37,7 @@ public class EventosController {
 		System.out.println(evento);
 		er.save(evento);
 
-		return "eventos/evento-adicionado";
+		return "redirect:/eventos";
 	}
 
 	@GetMapping
@@ -49,7 +49,7 @@ public class EventosController {
 	}
 
 	@GetMapping("/{id}")
-	public ModelAndView detalhar(@PathVariable Long id) {
+	public ModelAndView detalhar(@PathVariable Long id, convidado convidado) {
 		ModelAndView md = new ModelAndView();
 		Optional<Evento> opt = er.findById(id); 
 		if (opt.isEmpty()) {
@@ -81,6 +81,49 @@ public class EventosController {
 			cr.save(convidado);
 		return "redirect:/eventos/{codigo}";
 	}
+	
+	@GetMapping ("/{id}/selecionar")
+	public ModelAndView selecionarEvento(@PathVariable Long id) {
+		ModelAndView md = new ModelAndView();
+		Optional<Evento> opt = er.findById(id);
+		if(opt.isEmpty()) {
+			md.setViewName("redirect:/eventos");
+			return md;
+		}
+		Evento evento = opt.get();
+		md.setViewName("eventos/formEvento");
+		md.addObject("evento",evento);
+		return md;
+		
+	}
+	
+	@GetMapping ("/{idEvento}/convidados/{idConvidado}/selecionar")
+	public ModelAndView selecionarConvidado(@PathVariable Long idEvento, @PathVariable Long idConvidado) {
+		ModelAndView md = new ModelAndView();
+		
+		Optional<Evento> optEvento = er.findById(idConvidado);
+		Optional<convidado> optConvidado = cr.findById(idConvidado);
+		if(optEvento.isEmpty() || optConvidado.isEmpty()) {
+			md.setViewName("redirect:/eventos");
+			return md;
+		}
+		Evento evento = optEvento.get();
+		convidado convidado = optConvidado.get();
+		
+		if(evento.getId() != convidado.getEvento().getId()) {
+			md.setViewName("redirect:/eventos");
+			return md;
+		}
+		
+		md.setViewName("eventos/detalhes");
+		md.addObject("convidado", convidado);
+		md.addObject("evento", evento);
+		md.addObject("convidados", cr.findByEvento(evento));
+		
+		return md;
+	}
+	
+	
 	@GetMapping("/{id}/remover")
 	public String apagarEvento(@PathVariable Long id) {
 		
